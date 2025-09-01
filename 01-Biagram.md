@@ -39,7 +39,7 @@ i   0    0    0    0    0    0    1
 l   0    1    0    0    0    1    0
 s   0    1    0    0    0    0    0
 ```
-![alt text](counts-matrix.png)
+![alt text](./figures/counts-matrix.png)
 
 ### Sampling
 1. Normalize each row of the 2-D matrix as a normalized probability distribution.

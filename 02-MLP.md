@@ -4,7 +4,7 @@ Based on the single layer network built before, we step one more further to buil
 We now have a model that can deal with one character of previous context. But the prediction was now good. One way to improve is to add more context character, but how? If we use 2-D matrix to have exist times, we simply stack way more rows and probs which will be computing expensive. So we introduce MLP(Multi Layer Perceptron) to complexify the model.
 
 Referenced Paper: [A Neural Probabilistic Language Model](https://www.jmlr.org/papers/volume3/bengio03a/bengio03a.pdf). Yoshua Bengio, Rejean Ducharme, Pascal Vincent, Christian Jauvin
-![alt text](Neural%20Architecture.png)
+![alt text](./figures/Neural%20Architecture.png)
 
 ## Data
 * Open the same `names.txt` file and spilt based on lines.
@@ -143,7 +143,7 @@ But just add more neurons per layer has bottlenecks that the input embedding is 
 
 ### Larger embedding
 For 2-D trained embedding, we can see below. where `m` and `l`, `r` and `g` has similar feature while `.` is regarded as special.
-![alt text](Trained_emb-1.png)
+![alt text](./figures/Trained_emb-1.png)
 
 Then we can scale up the emb dimension for model.
 ```python
