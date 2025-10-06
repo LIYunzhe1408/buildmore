@@ -51,8 +51,10 @@ loss = -logprobs[range(batch_size), Yb].mean()
    4. `db2 = dlogits.sum(dim=0)`
 
 
-## Cross entropy backward pass
+## Exercise 2: Cross entropy backward pass
 In practice, we will not separate out loss calculation into multiple lines as small atomic pieces and we backproped them individually. Mathematically, some items can be cancelled and the expression can be shortened.
+
+Forward pass: 
 ```python
 # Cross entropy loss (same as F.cross_entropy(logits, Yb))
 logit_maxes = logits.max(dim=1, keepdim=True).values
@@ -63,4 +65,52 @@ counts_sum_inv = counts_sum**-1
 probs = counts * counts_sum_inv
 logprobs = probs.log()
 loss = -logprobs[range(batch_size), Yb].mean()
+```
+
+Backward pass:
+```python
+dprobs = (1.0 / probs) * dlogprobs
+dcounts_sum_inv = (counts * dprobs).sum(dim=1, keepdim=True)
+dcounts = counts_sum_inv * dprobs # [32,1] * [32, 27]
+dcounts_sum = -counts_sum**(-2) * dcounts_sum_inv
+dcounts += torch.ones_like(counts) * dcounts_sum
+
+dnorm_logits = dcounts * counts
+dlogits = dnorm_logits.clone()
+dlogit_maxes = -(dnorm_logits).sum(1, keepdim=True)
+dlogits += F.one_hot(logits.max(dim=1, keepdim=False).indices, logits.shape[1]) * dlogit_maxes
+```
+
+
+
+## Exercise 3: Batch Normalization backward pass
+Do the same thing as what we did for cross entropy loss in exercise 2. We consider it as a glued single mathematical expression and backpropgate through it in a very efficient manner.
+
+Forward pass:
+```python
+# BatchNorm layer
+bnmeani = 1/n * hprebn.sum(dim=0, keepdim=True)
+bndiff = hprebn - bnmeani
+bndiff2 = bndiff ** 2
+bnvar = 1/(n-1) * bndiff2.sum(dim=0, keepdim=True) # Bessel's correction: dividing by n-1
+bnvar_inv = (bnvar + 1e-5)**-0.5
+bnraw = bndiff * bnvar_inv
+hpreact = bngain * bnraw + bnbias
+```
+
+Backward pass:
+```python
+dhpreact = dh * (1 - h**2)
+dbngain = (dhpreact * bnraw).sum(dim=0, keepdim=True)
+dbnraw = dhpreact * bngain
+dbnbias = dhpreact.sum(dim=0, keepdim=True)
+
+dbndiff = bnvar_inv * dbnraw
+dbnvar_inv = (dbnraw * bndiff).sum(dim=0, keepdim=True)
+dbnvar = dbnvar_inv * (-0.5 * (bnvar + 1e-5)**-1.5)
+dbndiff2 = dbnvar * (1.0/(n-1)) * torch.ones_like(bndiff2)
+dbndiff += 2 * bndiff * dbndiff2
+dbnmeani = (dbndiff * -1.0).sum(dim=0)
+dhprebn = dbndiff.clone()
+dhprebn += dbnmeani * (1/n) * torch.ones_like(hprebn)
 ```
