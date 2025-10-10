@@ -8,3 +8,6 @@ Based on the single layer network built before, we step one more further to buil
 
 ## [Activations, Gradients, and BatchNorm](./03-Activations%20Gradients%20and%20BatchNorm.md)
 Introduce BatchNorm to stablize the training process, and viz tools to plot activation, gradients, and some ratios dynamically. Also we PyTorch-ifying the code to modules for future extension.
+
+## [Backprop Ninja](./04-Backprop%20Ninja.md)
+We did not use `loss.backward()` and pytorch auto grad, and we estimate gradients ourselves by hand. It gave us a pretty nice diversity of layers to backprop through. It also gave us a pretty nice and comprehensive sense of how these backward passes are implemented and how they work. You will have some intuition about how gradients flow backwards throughthe neural net starting at the loss and how they flow through all the variables and all the intermediate results.

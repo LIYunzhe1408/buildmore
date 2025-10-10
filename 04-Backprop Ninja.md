@@ -1,3 +1,11 @@
+# Backprop Ninja
+We manually backprop the neural network by breaking down every operation and replace `loss.backward()` with our hand-made one.
+
+It gave us a pretty nice diversity of layers to backprop through. It also gave us a pretty nice and comprehensive sense of how these backward passes are implemented and how they work. You will have some intuition about how gradients flow backwards throughthe neural net starting at the loss and how they flow through all the variables and all the intermediate results.
+```python
+# Now we will replace this with our hand-made backward()
+# loss.backward()
+```
 
 
 ## Exercise 1: Backprop step by step
@@ -81,6 +89,8 @@ dlogit_maxes = -(dnorm_logits).sum(1, keepdim=True)
 dlogits += F.one_hot(logits.max(dim=1, keepdim=False).indices, logits.shape[1]) * dlogit_maxes
 ```
 
+Proof:
+![alt text](./figures/cross_entropy_backprop.jpg)
 
 
 ## Exercise 3: Batch Normalization backward pass
@@ -114,3 +124,51 @@ dbnmeani = (dbndiff * -1.0).sum(dim=0)
 dhprebn = dbndiff.clone()
 dhprebn += dbnmeani * (1/n) * torch.ones_like(hprebn)
 ```
+
+Proof:
+![alt text](./figures/BN_backprop.jpg)
+
+
+## Exercise 4: Put all in one go
+Notice that He/Kaiming init is just used for hidden layer that include activations where keeping variance is important for stable forwarding.
+
+```python
+# Backward pass
+for p in parameters:
+   p.grad = None
+# Now we will replace this with our hand-made backward()
+# loss.backward()
+
+# Mannual backward pass
+# ---------------------------------------------------------------
+dlogits = F.softmax(logits, dim=1)
+dlogits[range(n), Yb] -= 1
+dlogits /= n
+# 2nd layer backprop
+dh = dlogits @ W2.T
+dW2 = h.T @ dlogits
+db2 = dlogits.sum(dim=0)
+# Tanh
+dhpreact = dh * (1 - h**2)
+# batchnorm backprop
+dbngain = (dhpreact * bnraw).sum(dim=0, keepdim=True)
+dbnbias = dhpreact.sum(dim=0, keepdim=True)
+dhprebn = bngain*bnvar_inv/n * (n*dhpreact - dhpreact.sum(dim=0) - n/(n-1) * bnraw * (dhpreact*bnraw).sum(0))
+# 1st layer backprop
+dembact = dhprebn @ W1.T
+dW1 = embact.T @ dhprebn
+db1 = dhprebn.sum(dim=0)
+# embedding
+demb = dembact.view(emb.shape)
+dC = torch.zeros_like(C)
+for row in range(Xb.shape[0]):
+   for column in range(Xb.shape[1]):
+         row_of_C = Xb[row, column]
+         dC[row_of_C] += demb[row, column]
+grads = [dC, dW1, db1, dW2, db2, dbngain, dbnbias]
+# ---------------------------------------------------------------
+```
+## Conclusion
+Everything is the same, but of course the big deal is that we did not use `loss.backward()` and pytorch auto grad and we estimate gradients ourselves by hand.
+
+It gave us a pretty nice diversity of layers to backprop through. It also gave us a pretty nice and comprehensive sense of how these backward passes are implemented and how they work. You will have some intuition about how gradients flow backwards throughthe neural net starting at the loss and how they flow through all the variables and all the intermediate results.
