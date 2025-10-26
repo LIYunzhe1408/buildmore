@@ -11,3 +11,6 @@ Introduce BatchNorm to stablize the training process, and viz tools to plot acti
 
 ## [Backprop Ninja](./04-Backprop%20Ninja.md)
 We did not use `loss.backward()` and pytorch auto grad, and we estimate gradients ourselves by hand. It gave us a pretty nice diversity of layers to backprop through. It also gave us a pretty nice and comprehensive sense of how these backward passes are implemented and how they work. You will have some intuition about how gradients flow backwards throughthe neural net starting at the loss and how they flow through all the variables and all the intermediate results.
+
+## [WaveNet](./05-WaveNet.md)
+
